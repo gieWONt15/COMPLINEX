@@ -17,4 +17,6 @@ public abstract class Osoba
     {
         Console.WriteLine($"Nazywam się {Imie} {Nazwisko}.");
     }
+
+    public abstract string PodajInformacje();
 }
