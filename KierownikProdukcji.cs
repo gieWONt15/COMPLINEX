@@ -18,4 +18,10 @@ public class KierownikProdukcji : Kierownik
     {
         Console.WriteLine("Przeprowadzam kwartalną ewaluację pracowników produkcji na podstawie wskaźników efektywności, jakości pracy oraz dyscypliny.");
     }
+
+    public override decimal ObliczPremie()
+    {
+        decimal premia = base.ObliczPremie();
+        return premia * (decimal)(WskaznikEfektywnosciProdukcji / 100);
+    }
 }
