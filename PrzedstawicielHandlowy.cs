@@ -1,6 +1,6 @@
 namespace COMPLINEX;
 
-public abstract class PrzedstawicielHandlowy : Pracownik
+public class PrzedstawicielHandlowy : Pracownik
 {
     public decimal WartoscSprzedazy { get; set; }
     public double ProcentProwizji { get; set; }
