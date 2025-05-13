@@ -1,264 +1,202 @@
 namespace COMPLINEX;
 
-// Klasa bazowa reprezentująca ocenę pracownika
+/// <summary>
+/// Abstrakcyjna klasa reprezentująca ocenę pracownika
+/// </summary>
 public abstract class OcenaPracownika
 {
+    /// <summary>
+    /// Identyfikator oceny
+    /// </summary>
+    public int Id { get; set; }
+    
+    /// <summary>
+    /// Identyfikator pracownika, którego dotyczy ocena
+    /// </summary>
+    public string IdPracownika { get; protected set; }
+    
+    /// <summary>
+    /// Referencja do pracownika (nie przechowywana w bazie)
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
     public Pracownik Pracownik { get; private set; }
-    public int Rok { get; private set; }
-    public DateTime DataWystawienia { get; private set; }
+    
+    /// <summary>
+    /// Identyfikator osoby dokonującej oceny (specjalisty HR)
+    /// </summary>
+    public string IdOceniajacegoHR { get; protected set; }
+    
+    /// <summary>
+    /// Referencja do oceniającego HR (nie przechowywana w bazie)
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
     public SpecjalistaHR OceniajacyHR { get; private set; }
+    
+    /// <summary>
+    /// Data wystawienia oceny
+    /// </summary>
+    public DateTime DataWystawienia { get; protected set; }
+    
+    /// <summary>
+    /// Rok, którego dotyczy ocena
+    /// </summary>
+    public int Rok { get; protected set; }
+    
+    /// <summary>
+    /// Komentarz dodany do oceny
+    /// </summary>
     public string Komentarz { get; set; }
     
-    // Ocena w skali 1-5
+    /// <summary>
+    /// Ocena końcowa (w skali 1-5)
+    /// </summary>
     public int OcenaOgolna { get; protected set; }
     
+    /// <summary>
+    /// Status oceny (np. wersja robocza, zatwierdzona, odrzucona)
+    /// </summary>
+    public string Status { get; set; }
+    
+    /// <summary>
+    /// Kategoria/dział, do którego należy pracownik
+    /// </summary>
+    public string Kategoria { get; protected set; }
+    
+    /// <summary>
+    /// Inicjalizuje nową instancję klasy OcenaPracownika
+    /// </summary>
+    /// <param name="pracownik">Pracownik, którego dotyczy ocena</param>
+    /// <param name="rok">Rok, którego dotyczy ocena</param>
+    /// <param name="oceniajacyHR">Specjalista HR dokonujący oceny</param>
+    /// <param name="komentarz">Komentarz do oceny</param>
     protected OcenaPracownika(Pracownik pracownik, int rok, SpecjalistaHR oceniajacyHR, string komentarz)
     {
         Pracownik = pracownik;
-        Rok = rok;
-        DataWystawienia = DateTime.Now;
+        IdPracownika = pracownik.NumerPracownika;
         OceniajacyHR = oceniajacyHR;
+        IdOceniajacegoHR = oceniajacyHR.NumerPracownika;
+        Rok = rok;
         Komentarz = komentarz;
+        DataWystawienia = DateTime.Now;
+        Status = "Wersja robocza";
+        OkreslKategorie();
     }
     
-    // Metoda abstrakcyjna do obliczania oceny - każdy typ pracownika będzie miał własny algorytm
+    /// <summary>
+    /// Inicjalizuje nową instancję klasy OcenaPracownika na podstawie danych z bazy
+    /// </summary>
+    /// <param name="id">Identyfikator oceny</param>
+    /// <param name="idPracownika">Identyfikator pracownika</param>
+    /// <param name="idOceniajacegoHR">Identyfikator oceniającego HR</param>
+    /// <param name="dataWystawienia">Data wystawienia oceny</param>
+    /// <param name="rok">Rok oceny</param>
+    /// <param name="komentarz">Komentarz do oceny</param>
+    /// <param name="ocenaOgolna">Ocena ogólna</param>
+    /// <param name="status">Status oceny</param>
+    /// <param name="kategoria">Kategoria pracownika</param>
+    protected OcenaPracownika(int id, string idPracownika, string idOceniajacegoHR, DateTime dataWystawienia,
+        int rok, string komentarz, int ocenaOgolna, string status, string kategoria)
+    {
+        Id = id;
+        IdPracownika = idPracownika;
+        IdOceniajacegoHR = idOceniajacegoHR;
+        DataWystawienia = dataWystawienia;
+        Rok = rok;
+        Komentarz = komentarz;
+        OcenaOgolna = ocenaOgolna;
+        Status = status;
+        Kategoria = kategoria;
+    }
+    
+    /// <summary>
+    /// Określa kategorię pracownika na podstawie jego typu
+    /// </summary>
+    protected virtual void OkreslKategorie()
+    {
+        if (Pracownik is InzynierProdukcji)
+            Kategoria = "Produkcja";
+        else if (Pracownik is PrzedstawicielHandlowy)
+            Kategoria = "Sprzedaż";
+        else if (Pracownik is Kierownik kierownik)
+            Kategoria = $"Kierownictwo - {kierownik.Dzial}";
+        else if (Pracownik is SpecjalistaHR)
+            Kategoria = "HR";
+        else
+            Kategoria = "Inna";
+    }
+    
+    /// <summary>
+    /// Ustawia referencje do obiektów (pracownik, oceniający HR) po załadowaniu z bazy
+    /// </summary>
+    /// <param name="pracownik">Pracownik, którego dotyczy ocena</param>
+    /// <param name="oceniajacyHR">Specjalista HR dokonujący oceny</param>
+    public void UstawReferencje(Pracownik pracownik, SpecjalistaHR oceniajacyHR)
+    {
+        Pracownik = pracownik;
+        OceniajacyHR = oceniajacyHR;
+    }
+    
+    /// <summary>
+    /// Oblicza ocenę końcową na podstawie kryteriów
+    /// </summary>
     public abstract void ObliczOcene();
     
-    // Metoda wyświetlająca szczegóły oceny
+    /// <summary>
+    /// Zatwierdza ocenę
+    /// </summary>
+    public virtual void ZatwierdzOcene()
+    {
+        Status = "Zatwierdzona";
+    }
+    
+    /// <summary>
+    /// Odrzuca ocenę
+    /// </summary>
+    /// <param name="powod">Powód odrzucenia oceny</param>
+    public virtual void OdrzucOcene(string powod)
+    {
+        Status = "Odrzucona";
+        Komentarz += $"\nOdrzucono: {powod}";
+    }
+    
+    /// <summary>
+    /// Wyświetla szczegóły oceny pracownika
+    /// </summary>
     public virtual void WyswietlOcene()
     {
-        Console.WriteLine($"\n=== OCENA ROCZNA ZA ROK {Rok} ===");
-        Console.WriteLine($"Pracownik: {Pracownik.Imie} {Pracownik.Nazwisko} (ID: {Pracownik.NumerPracownika})");
+        Console.WriteLine($"\n=== OCENA ZA ROK {Rok} ===");
+        Console.WriteLine($"ID: {Id}");
         Console.WriteLine($"Data wystawienia: {DataWystawienia.ToShortDateString()}");
-        Console.WriteLine($"Oceniający HR: {OceniajacyHR.Imie} {OceniajacyHR.Nazwisko}");
+        
+        string informacjePracownika;
+        if (Pracownik != null)
+            informacjePracownika = $"{Pracownik.Imie} {Pracownik.Nazwisko} (ID: {IdPracownika})";
+        else
+            informacjePracownika = $"ID Pracownika: {IdPracownika}";
+        
+        string informacjeHR;
+        if (OceniajacyHR != null)
+            informacjeHR = $"{OceniajacyHR.Imie} {OceniajacyHR.Nazwisko}";
+        else
+            informacjeHR = $"ID HR: {IdOceniajacegoHR}";
+        
+        Console.WriteLine($"Pracownik: {informacjePracownika}");
+        Console.WriteLine($"Oceniający HR: {informacjeHR}");
         Console.WriteLine($"Ocena ogólna: {OcenaOgolna}/5");
+        Console.WriteLine($"Status: {Status}");
+        Console.WriteLine($"Kategoria: {Kategoria}");
         Console.WriteLine($"Komentarz: {Komentarz}");
     }
-}
-
-// Ocena dla inżyniera produkcji
-public class OcenaInzynieraProdukcji : OcenaPracownika
-{
-    public int OcenaEfektywnosci { get; set; }          // 1-5
-    public int OcenaInnowacyjnosci { get; set; }        // 1-5
-    public int OcenaJakosciPracy { get; set; }          // 1-5
-    public int OcenaRealizacjiProjektow { get; set; }   // 1-5
     
-    public OcenaInzynieraProdukcji(InzynierProdukcji pracownik, int rok, SpecjalistaHR oceniajacyHR, 
-        string komentarz, int ocenaEfektywnosci, int ocenaInnowacyjnosci, 
-        int ocenaJakosciPracy, int ocenaRealizacjiProjektow)
-        : base(pracownik, rok, oceniajacyHR, komentarz)
+    /// <summary>
+    /// Eksportuje ocenę do formatu JSON
+    /// </summary>
+    /// <returns>Reprezentacja oceny w formacie JSON</returns>
+    public string EksportujDoJSON()
     {
-        OcenaEfektywnosci = ocenaEfektywnosci;
-        OcenaInnowacyjnosci = ocenaInnowacyjnosci;
-        OcenaJakosciPracy = ocenaJakosciPracy;
-        OcenaRealizacjiProjektow = ocenaRealizacjiProjektow;
-        ObliczOcene();
-    }
-    
-    public override void ObliczOcene()
-    {
-        // Ocena ważona - różne aspekty mają różne wagi
-        double ocena = (OcenaEfektywnosci * 0.25) + 
-                       (OcenaInnowacyjnosci * 0.2) + 
-                       (OcenaJakosciPracy * 0.3) + 
-                       (OcenaRealizacjiProjektow * 0.25);
-        
-        OcenaOgolna = (int)Math.Round(ocena);
-    }
-    
-    public override void WyswietlOcene()
-    {
-        base.WyswietlOcene();
-        
-        var inzynier = (InzynierProdukcji)Pracownik;
-        Console.WriteLine("\nSzczegóły oceny inżyniera produkcji:");
-        Console.WriteLine($"Specjalizacja: {inzynier.Specjalizacja}");
-        Console.WriteLine($"Efektywność: {OcenaEfektywnosci}/5");
-        Console.WriteLine($"Innowacyjność: {OcenaInnowacyjnosci}/5");
-        Console.WriteLine($"Jakość pracy: {OcenaJakosciPracy}/5");
-        Console.WriteLine($"Realizacja projektów: {OcenaRealizacjiProjektow}/5");
-    }
-}
-
-// Ocena dla przedstawiciela handlowego
-public class OcenaPrzedstawicielaHandlowego : OcenaPracownika
-{
-    public int OcenaRealizacjiCelowSprzedazowych { get; set; }    // 1-5
-    public int OcenaPozyskiwaniaKlientow { get; set; }           // 1-5
-    public int OcenaObslugiKlienta { get; set; }                 // 1-5
-    public int OcenaUmiejetnosciNegocjacyjnych { get; set; }     // 1-5
-    
-    public OcenaPrzedstawicielaHandlowego(PrzedstawicielHandlowy pracownik, int rok, SpecjalistaHR oceniajacyHR, 
-        string komentarz, int ocenaRealizacjiCelowSprzedazowych, int ocenaPozyskiwaniaKlientow, 
-        int ocenaObslugiKlienta, int ocenaUmiejetnosciNegocjacyjnych)
-        : base(pracownik, rok, oceniajacyHR, komentarz)
-    {
-        OcenaRealizacjiCelowSprzedazowych = ocenaRealizacjiCelowSprzedazowych;
-        OcenaPozyskiwaniaKlientow = ocenaPozyskiwaniaKlientow;
-        OcenaObslugiKlienta = ocenaObslugiKlienta;
-        OcenaUmiejetnosciNegocjacyjnych = ocenaUmiejetnosciNegocjacyjnych;
-        ObliczOcene();
-    }
-    
-    public override void ObliczOcene()
-    {
-        // Dla handlowców najważniejsza jest realizacja celów sprzedażowych
-        double ocena = (OcenaRealizacjiCelowSprzedazowych * 0.4) + 
-                       (OcenaPozyskiwaniaKlientow * 0.25) + 
-                       (OcenaObslugiKlienta * 0.2) + 
-                       (OcenaUmiejetnosciNegocjacyjnych * 0.15);
-        
-        OcenaOgolna = (int)Math.Round(ocena);
-    }
-    
-    public override void WyswietlOcene()
-    {
-        base.WyswietlOcene();
-        
-        var handlowiec = (PrzedstawicielHandlowy)Pracownik;
-        Console.WriteLine("\nSzczegóły oceny przedstawiciela handlowego:");
-        Console.WriteLine($"Wartość sprzedaży: {handlowiec.WartoscSprzedazy:C}");
-        Console.WriteLine($"Realizacja celów sprzedażowych: {OcenaRealizacjiCelowSprzedazowych}/5");
-        Console.WriteLine($"Pozyskiwanie klientów: {OcenaPozyskiwaniaKlientow}/5");
-        Console.WriteLine($"Obsługa klienta: {OcenaObslugiKlienta}/5");
-        Console.WriteLine($"Umiejętności negocjacyjne: {OcenaUmiejetnosciNegocjacyjnych}/5");
-    }
-}
-
-// Ocena dla specjalisty HR
-public class OcenaSpecjalistyHR : OcenaPracownika
-{
-    public int OcenaEfektywnosciRekrutacji { get; set; }    // 1-5
-    public int OcenaJakosciSzkolen { get; set; }           // 1-5
-    public int OcenaDokumentacji { get; set; }             // 1-5
-    public int OcenaWspolpracyZZespolem { get; set; }      // 1-5
-    
-    public OcenaSpecjalistyHR(SpecjalistaHR pracownik, int rok, SpecjalistaHR oceniajacyHR, 
-        string komentarz, int ocenaEfektywnosciRekrutacji, int ocenaJakosciSzkolen, 
-        int ocenaDokumentacji, int ocenaWspolpracyZZespolem)
-        : base(pracownik, rok, oceniajacyHR, komentarz)
-    {
-        OcenaEfektywnosciRekrutacji = ocenaEfektywnosciRekrutacji;
-        OcenaJakosciSzkolen = ocenaJakosciSzkolen;
-        OcenaDokumentacji = ocenaDokumentacji;
-        OcenaWspolpracyZZespolem = ocenaWspolpracyZZespolem;
-        ObliczOcene();
-    }
-    
-    public override void ObliczOcene()
-    {
-        // Dla HR ważna jest rekrutacja i dokumentacja
-        double ocena = (OcenaEfektywnosciRekrutacji * 0.35) + 
-                       (OcenaJakosciSzkolen * 0.2) + 
-                       (OcenaDokumentacji * 0.3) + 
-                       (OcenaWspolpracyZZespolem * 0.15);
-        
-        OcenaOgolna = (int)Math.Round(ocena);
-    }
-    
-    public override void WyswietlOcene()
-    {
-        base.WyswietlOcene();
-        
-        var hr = (SpecjalistaHR)Pracownik;
-        Console.WriteLine("\nSzczegóły oceny specjalisty HR:");
-        Console.WriteLine($"Obszar specjalizacji: {hr.ObszarSpecjalizacji}");
-        Console.WriteLine($"Efektywność rekrutacji: {OcenaEfektywnosciRekrutacji}/5");
-        Console.WriteLine($"Jakość szkoleń: {OcenaJakosciSzkolen}/5");
-        Console.WriteLine($"Prowadzenie dokumentacji: {OcenaDokumentacji}/5");
-        Console.WriteLine($"Współpraca z zespołem: {OcenaWspolpracyZZespolem}/5");
-    }
-}
-
-// Ocena dla kierownika
-public class OcenaKierownika : OcenaPracownika
-{
-    public int OcenaZarzadzaniaZespolem { get; set; }         // 1-5
-    public int OcenaRealizacjiCelow { get; set; }             // 1-5
-    public int OcenaUmiejetnosciPrzywodczych { get; set; }    // 1-5
-    public int OcenaZarzadzaniaKryzysowego { get; set; }      // 1-5
-    
-    public OcenaKierownika(Kierownik pracownik, int rok, SpecjalistaHR oceniajacyHR, 
-        string komentarz, int ocenaZarzadzaniaZespolem, int ocenaRealizacjiCelow, 
-        int ocenaUmiejetnosciPrzywodczych, int ocenaZarzadzaniaKryzysowego)
-        : base(pracownik, rok, oceniajacyHR, komentarz)
-    {
-        OcenaZarzadzaniaZespolem = ocenaZarzadzaniaZespolem;
-        OcenaRealizacjiCelow = ocenaRealizacjiCelow;
-        OcenaUmiejetnosciPrzywodczych = ocenaUmiejetnosciPrzywodczych;
-        OcenaZarzadzaniaKryzysowego = ocenaZarzadzaniaKryzysowego;
-        ObliczOcene();
-    }
-    
-    public override void ObliczOcene()
-    {
-        // Dla kierownika ważne są umiejętności przywódcze i zarządzanie zespołem
-        double ocena = (OcenaZarzadzaniaZespolem * 0.3) + 
-                       (OcenaRealizacjiCelow * 0.25) + 
-                       (OcenaUmiejetnosciPrzywodczych * 0.3) + 
-                       (OcenaZarzadzaniaKryzysowego * 0.15);
-        
-        OcenaOgolna = (int)Math.Round(ocena);
-    }
-    
-    public override void WyswietlOcene()
-    {
-        base.WyswietlOcene();
-        
-        var kierownik = (Kierownik)Pracownik;
-        Console.WriteLine("\nSzczegóły oceny kierownika:");
-        Console.WriteLine($"Dział: {kierownik.Dzial}");
-        Console.WriteLine($"Liczba podwładnych: {kierownik.LiczbaPodwladnych}");
-        Console.WriteLine($"Zarządzanie zespołem: {OcenaZarzadzaniaZespolem}/5");
-        Console.WriteLine($"Realizacja celów działu: {OcenaRealizacjiCelow}/5");
-        Console.WriteLine($"Umiejętności przywódcze: {OcenaUmiejetnosciPrzywodczych}/5");
-        Console.WriteLine($"Zarządzanie kryzysowe: {OcenaZarzadzaniaKryzysowego}/5");
-    }
-}
-
-// Specjalna ocena dla inżyniera pełniącego rolę kierownika projektu
-public class OcenaInzynieraKierownikaProjektu : OcenaPracownika
-{
-    public int OcenaEfektywnosciPracy { get; set; }           // 1-5
-    public int OcenaZarzadzaniaProjektami { get; set; }       // 1-5
-    public int OcenaUmiejetnosciTechnicznych { get; set; }    // 1-5
-    public int OcenaZarzadzaniaZespolem { get; set; }         // 1-5
-    
-    public OcenaInzynieraKierownikaProjektu(InzynierKierownikProjektu pracownik, int rok, SpecjalistaHR oceniajacyHR, 
-        string komentarz, int ocenaEfektywnosciPracy, int ocenaZarzadzaniaProjektami, 
-        int ocenaUmiejetnosciTechnicznych, int ocenaZarzadzaniaZespolem)
-        : base(pracownik, rok, oceniajacyHR, komentarz)
-    {
-        OcenaEfektywnosciPracy = ocenaEfektywnosciPracy;
-        OcenaZarzadzaniaProjektami = ocenaZarzadzaniaProjektami;
-        OcenaUmiejetnosciTechnicznych = ocenaUmiejetnosciTechnicznych;
-        OcenaZarzadzaniaZespolem = ocenaZarzadzaniaZespolem;
-        ObliczOcene();
-    }
-    
-    public override void ObliczOcene()
-    {
-        // Hybrydowa ocena dla inżyniera kierownika projektu
-        double ocena = (OcenaEfektywnosciPracy * 0.2) + 
-                       (OcenaZarzadzaniaProjektami * 0.35) + 
-                       (OcenaUmiejetnosciTechnicznych * 0.2) + 
-                       (OcenaZarzadzaniaZespolem * 0.25);
-        
-        OcenaOgolna = (int)Math.Round(ocena);
-    }
-    
-    public override void WyswietlOcene()
-    {
-        base.WyswietlOcene();
-        
-        var inzynierKierownik = (InzynierKierownikProjektu)Pracownik;
-        Console.WriteLine("\nSzczegóły oceny inżyniera kierownika projektu:");
-        Console.WriteLine($"Specjalizacja: {inzynierKierownik.Specjalizacja}");
-        Console.WriteLine($"Liczba zarządzanych projektów: {inzynierKierownik.LiczbaProjektow}");
-        Console.WriteLine($"Efektywność pracy: {OcenaEfektywnosciPracy}/5");
-        Console.WriteLine($"Zarządzanie projektami: {OcenaZarzadzaniaProjektami}/5");
-        Console.WriteLine($"Umiejętności techniczne: {OcenaUmiejetnosciTechnicznych}/5");
-        Console.WriteLine($"Zarządzanie zespołem: {OcenaZarzadzaniaZespolem}/5");
+        return System.Text.Json.JsonSerializer.Serialize(this, new System.Text.Json.JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
     }
 }
