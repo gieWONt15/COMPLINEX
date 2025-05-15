@@ -35,7 +35,7 @@ public abstract class OcenaPracownika
     /// <summary>
     /// Data wystawienia oceny
     /// </summary>
-    public DateTime DataWystawienia { get; protected set; }
+    public DateTime DataWystawienia { get; set; }
     
     /// <summary>
     /// Rok, którego dotyczy ocena
@@ -50,7 +50,7 @@ public abstract class OcenaPracownika
     /// <summary>
     /// Ocena końcowa (w skali 1-5)
     /// </summary>
-    public int OcenaOgolna { get; protected set; }
+    public int OcenaOgolna { get; set; }
     
     /// <summary>
     /// Status oceny (np. wersja robocza, zatwierdzona, odrzucona)
@@ -60,7 +60,7 @@ public abstract class OcenaPracownika
     /// <summary>
     /// Kategoria/dział, do którego należy pracownik
     /// </summary>
-    public string Kategoria { get; protected set; }
+    public string Kategoria { get; set; }
     
     /// <summary>
     /// Inicjalizuje nową instancję klasy OcenaPracownika

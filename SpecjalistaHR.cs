@@ -12,6 +12,11 @@ public class SpecjalistaHR : Pracownik
         ObszarSpecjalizacji = obaObszarSpecjalizacji;
     }
 
+    public SpecjalistaHR(string imie, string nazwisko, DateTime dataUrodzenia, string numerPracownika, DateTime dataZatrudnienia, decimal wynagrodzenie)
+    {
+        throw new NotImplementedException();
+    }
+
     public override void PrzedstawSie()
     {
         base.PrzedstawSie();

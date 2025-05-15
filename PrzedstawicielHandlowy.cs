@@ -12,6 +12,17 @@ public class PrzedstawicielHandlowy : Pracownik
         ProcentProwizji = procentProwizji;
     }
 
+    public PrzedstawicielHandlowy(string imie, string nazwisko, DateTime dataUrodzenia, string numerPracownika, DateTime dataZatrudnienia, decimal wynagrodzenie, decimal wartoscSprzedazy) : base()
+    {
+        WartoscSprzedazy = wartoscSprzedazy;
+        ProcentProwizji = 0.05; // Domyślny procent prowizji
+    }
+
+    public override string PodajInformacje()
+    {
+        throw new NotImplementedException();
+    }
+
     public override void PrzedstawSie()
     {
         base.PrzedstawSie();

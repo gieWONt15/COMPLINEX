@@ -1,3 +1,5 @@
+using System.Reflection.Metadata;
+
 namespace COMPLINEX;
 
 public abstract class Pracownik : Osoba
@@ -12,6 +14,11 @@ public abstract class Pracownik : Osoba
         NumerPracownika = numerPracownika;
         DataZatrudnienia = dataZatrudnienia;
         Wynagrodzenie = wynagrodzenie;
+    }
+
+    protected Pracownik() : base(imie: "Nieznany", nazwisko: "Nieznany", dataUrodzenia: DateTime.Now)
+    {
+        throw new NotImplementedException();
     }
 
     public override void PrzedstawSie()
