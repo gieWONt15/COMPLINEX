@@ -83,8 +83,8 @@ class Program
         {
             {"ZarzadzanieZespolem", 4},
             {"RealizacjaCelow", 5},
-            {"UmiejetnosciOrganizacyjne", 4},
-            {"Innowacyjnosc", 3}
+            {"UmiejetnosciPrzywodcze", 4},
+            {"ZarzadzanieKryzysowe", 3}
         };
         
         var ocenaKierownika = FabrykaOcen.UtworzOcene(
@@ -96,9 +96,9 @@ class Program
         var ocenaSzczegolowaSpecjalistyHr = new Dictionary<string, int>
         {
             {"EfektywnoscRekrutacji", 5},
-            {"Onboarding", 4},
-            {"ZarządzanieTalentami", 4},
-            {"UmiejetnosciInterpersonalne", 5}
+            {"JakoscSzkolen", 4},
+            {"Dokumentacja", 4},
+            {"WspolpracaZZespolem", 5}
         };
         
         var ocenaSpecjalistyHr = FabrykaOcen.UtworzOcene(
